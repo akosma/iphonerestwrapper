@@ -3,7 +3,7 @@
 //  iPhoneWrapperTest
 //
 //  Created by Adrian on 11/18/08.
-//  Copyright netinfluence 2008. All rights reserved.
+//  Copyright akosma software 2008. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>
@@ -13,15 +13,14 @@
 @class VerbPicker;
 
 @interface Controller : UIViewController <WrapperDelegate, UITextFieldDelegate>
-{
-    IBOutlet UITextField *address;
-    IBOutlet UITextField *parameter;
-    IBOutlet UITextView *output;
-    IBOutlet UIButton *popUpButton;
-    
-    Wrapper *engine;
-    VerbPicker *picker;
-}
+
+@property (nonatomic, strong) IBOutlet UITextField *address;
+@property (nonatomic, strong) IBOutlet UITextField *parameter;
+@property (nonatomic, strong) IBOutlet UITextView *output;
+@property (nonatomic, strong) IBOutlet UIButton *popUpButton;
+
+@property (nonatomic, strong) Wrapper *engine;
+@property (nonatomic, strong) VerbPicker *picker;
 
 - (IBAction)launch:(id)sender;
 - (IBAction)chooseMethod:(id)sender;

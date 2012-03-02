@@ -3,7 +3,7 @@
 //  iPhoneWrapperTest
 //
 //  Created by Adrian on 11/18/08.
-//  Copyright netinfluence 2008. All rights reserved.
+//  Copyright akosma software 2008. All rights reserved.
 //
 
 #import "Controller.h"
@@ -12,20 +12,25 @@
 
 @implementation Controller
 
+@synthesize address = _address;
+@synthesize parameter = _parameter;
+@synthesize output = _output;
+@synthesize popUpButton = _popUpButton;
+@synthesize engine = _engine;
+@synthesize picker = _picker;
+
 - (void)dealloc 
 {
-    [engine release];
-    engine = nil;
-    [picker release];
-    picker = nil;
+    [_engine release];
+    [_picker release];
     [super dealloc];
 }
 
 - (void)pickerDone
 {
-    [picker.view removeFromSuperview];
-    [popUpButton setTitle:picker.chosenVerb forState:UIControlStateNormal];
-    [popUpButton setTitle:picker.chosenVerb forState:UIControlStateHighlighted];
+    [self.picker.view removeFromSuperview];
+    [self.popUpButton setTitle:self.picker.chosenVerb forState:UIControlStateNormal];
+    [self.popUpButton setTitle:self.picker.chosenVerb forState:UIControlStateHighlighted];
 }
 
 #pragma mark -
@@ -33,10 +38,10 @@
 
 - (void)wrapper:(Wrapper *)wrapper didRetrieveData:(NSData *)data
 {
-    NSString *text = [engine responseAsText];
+    NSString *text = [self.engine responseAsText];
     if (text != nil)
     {
-        output.text = text;
+        self.output.text = text;
     }
     [UIApplication sharedApplication].networkActivityIndicatorVisible = NO;
 }
@@ -103,40 +108,42 @@
 
 - (IBAction)launch:(id)sender
 {
-    [address resignFirstResponder];
-    [parameter resignFirstResponder];
+    [self.address resignFirstResponder];
+    [self.parameter resignFirstResponder];
 
-    NSURL *url = [NSURL URLWithString:address.text];
+    NSURL *url = [NSURL URLWithString:self.address.text];
     NSDictionary *parameters = nil;
-    if ([parameter.text length] > 0)
+    if ([self.parameter.text length] > 0)
     {
         NSArray *keys = [NSArray arrayWithObjects:@"parameter", nil];
-        NSArray *values = [NSArray arrayWithObjects:parameter.text, nil];
+        NSArray *values = [NSArray arrayWithObjects:self.parameter.text, nil];
         parameters = [NSDictionary dictionaryWithObjects:values forKeys:keys];
     }
     
     [UIApplication sharedApplication].networkActivityIndicatorVisible = YES;
-    output.text = @"";
+    self.output.text = @"";
     
-    if (engine == nil)
+    if (self.engine == nil)
     {
-        engine = [[Wrapper alloc] init];
-        engine.delegate = self;
+        self.engine = [[[Wrapper alloc] init] autorelease];
+        self.engine.delegate = self;
     }
-    [engine sendRequestTo:url usingVerb:[popUpButton titleForState:UIControlStateNormal] withParameters:parameters];    
+    [self.engine sendRequestTo:url 
+                     usingVerb:[self.popUpButton titleForState:UIControlStateNormal] 
+                withParameters:parameters];    
 }
 
 - (IBAction)chooseMethod:(id)sender
 {
-    [address resignFirstResponder];
-    [parameter resignFirstResponder];
+    [self.address resignFirstResponder];
+    [self.parameter resignFirstResponder];
     
-    if (picker == nil)
+    if (self.picker == nil)
     {
-        picker = [[VerbPicker alloc] init];
-        picker.parent = self;
+        self.picker = [[[VerbPicker alloc] init] autorelease];
+        self.picker.parent = self;
     }
-    [self.view addSubview:picker.view];
+    [self.view addSubview:self.picker.view];
 }
 
 @end

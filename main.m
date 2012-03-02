@@ -3,7 +3,7 @@
 //  iPhoneWrapperTest
 //
 //  Created by Adrian on 11/18/08.
-//  Copyright netinfluence 2008. All rights reserved.
+//  Copyright akosma software 2008. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>

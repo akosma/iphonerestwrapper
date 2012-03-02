@@ -3,7 +3,7 @@
 //  iPhoneWrapperTest
 //
 //  Created by Adrian on 11/18/08.
-//  Copyright 2008 netinfluence. All rights reserved.
+//  Copyright 2008 akosma software. All rights reserved.
 //
 
 #import "VerbPicker.h"
@@ -11,30 +11,32 @@
 
 @implementation VerbPicker
 
-@synthesize parent;
-@synthesize chosenVerb;
+@synthesize parent = _parent;
+@synthesize chosenVerb = _chosenVerb;
+@synthesize picker = _picker;
+@synthesize verbs = _verbs;
 
 - (id)init
 {
     if (self = [super initWithNibName:@"VerbPicker" bundle:nil])
     {
-        verbs = [[NSArray alloc] initWithObjects:@"GET", @"POST", @"PUT", @"DELETE", nil];
-        chosenVerb = @"GET";
+        self.verbs = [NSArray arrayWithObjects:@"GET", @"POST", @"PUT", @"DELETE", nil];
+        self.chosenVerb = @"GET";
     }
     return self;
 }
 
 - (void)dealloc
 {
-    self.chosenVerb = nil;
-    [verbs release];
-    verbs = nil;
+    [_chosenVerb release];
+    [_verbs release];
+    [_picker release];
     [super dealloc];
 }
 
 - (IBAction)verbChosen:(id)sender
 {
-    [parent pickerDone];
+    [self.parent pickerDone];
 }
 
 #pragma mark -
@@ -42,12 +44,12 @@
 
 - (NSString *)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component
 {
-    return [verbs objectAtIndex:row];
+    return [self.verbs objectAtIndex:row];
 }
 
 - (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component
 {
-    chosenVerb = [verbs objectAtIndex:row];
+    self.chosenVerb = [self.verbs objectAtIndex:row];
 }
 
 #pragma mark -

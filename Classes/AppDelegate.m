@@ -3,7 +3,7 @@
 //  iPhoneWrapperTest
 //
 //  Created by Adrian on 11/18/08.
-//  Copyright netinfluence 2008. All rights reserved.
+//  Copyright akosma software 2008. All rights reserved.
 //
 
 #import "AppDelegate.h"
@@ -11,17 +11,20 @@
 
 @implementation AppDelegate
 
+@synthesize window = _window;
+@synthesize viewController = _viewController;
+
 - (void)applicationDidFinishLaunching:(UIApplication *)application 
 {
     // Override point for customization after app launch    
-    [window addSubview:viewController.view];
-    [window makeKeyAndVisible];
+    self.window.rootViewController = self.viewController;
+    [self.window makeKeyAndVisible];
 }
 
 - (void)dealloc 
 {
-    [viewController release];
-    [window release];
+    [_viewController release];
+    [_window release];
     [super dealloc];
 }
 

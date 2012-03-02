@@ -10,7 +10,7 @@
 
 @class Wrapper;
 
-@protocol WrapperDelegate
+@protocol WrapperDelegate <NSObject>
 
 @required
 - (void)wrapper:(Wrapper *)wrapper didRetrieveData:(NSData *)data;

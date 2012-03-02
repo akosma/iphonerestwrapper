@@ -3,7 +3,7 @@
 //  iPhoneWrapperTest
 //
 //  Created by Adrian on 11/18/08.
-//  Copyright 2008 netinfluence. All rights reserved.
+//  Copyright 2008 akosma software. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>
@@ -11,14 +11,9 @@
 @class Controller;
 
 @interface VerbPicker : UIViewController <UIPickerViewDataSource, UIPickerViewDelegate>
-{
-    IBOutlet UIPickerView *picker;
-    
-    Controller *parent;
-    NSArray *verbs;
-    NSString *chosenVerb;
-}
 
+@property (nonatomic, strong) IBOutlet UIPickerView *picker;
+@property (nonatomic, strong) NSArray *verbs;
 @property (nonatomic, copy) NSString *chosenVerb;
 @property (nonatomic, assign) Controller *parent;
 

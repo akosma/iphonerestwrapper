@@ -14,28 +14,28 @@
 
 @implementation Wrapper
 
-@synthesize receivedData;
-@synthesize asynchronous;
-@synthesize mimeType;
-@synthesize username;
-@synthesize password;
-@synthesize delegate;
+@synthesize receivedData = _receivedData;
+@synthesize asynchronous = _asynchronous;
+@synthesize mimeType = _mimeType;
+@synthesize username = _username;
+@synthesize password = _password;
+@synthesize delegate = _delegate;
+@synthesize conn = _conn;
 
-#pragma mark -
-#pragma mark Constructor and destructor
+#pragma mark - Constructor and destructor
 
 - (id)init
 {
     if(self = [super init])
     {
-        receivedData = [[NSMutableData alloc] init];
-        conn = nil;
+        self.receivedData = [NSMutableData data];
+        self.conn = nil;
 
-        asynchronous = YES;
-        mimeType = @"text/html";
-        delegate = nil;
-        username = @"";
-        password = @"";
+        self.asynchronous = YES;
+        self.mimeType = @"text/html";
+        self.delegate = nil;
+        self.username = @"";
+        self.password = @"";
     }
 
     return self;
@@ -43,11 +43,12 @@
 
 - (void)dealloc
 {
-    [receivedData release];
-    receivedData = nil;
-    self.mimeType = nil;
-    self.username = nil;
-    self.password = nil;
+    _delegate = nil;
+    [_receivedData release];
+    [_mimeType release];
+    [_username release];
+    [_password release];
+    [_conn release];
     [super dealloc];
 }
 
@@ -97,7 +98,7 @@
 
     NSMutableDictionary* headers = [[[NSMutableDictionary alloc] init] autorelease];
     [headers setValue:contentType forKey:@"Content-Type"];
-    [headers setValue:mimeType forKey:@"Accept"];
+    [headers setValue:self.mimeType forKey:@"Accept"];
     [headers setValue:@"no-cache" forKey:@"Cache-Control"];
     [headers setValue:@"no-cache" forKey:@"Pragma"];
     [headers setValue:@"close" forKey:@"Connection"]; // Avoid HTTP 1.1 "keep alive" for the connection
@@ -146,16 +147,15 @@
 
 - (void)cancelConnection
 {
-    [conn cancel];
-    [conn release];
-    conn = nil;
+    [self.conn cancel];
+    self.conn = nil;
 }
 
 - (NSDictionary *)responseAsPropertyList
 {
     NSString *errorStr = nil;
     NSPropertyListFormat format;
-    NSDictionary *propertyList = [NSPropertyListSerialization propertyListFromData:receivedData
+    NSDictionary *propertyList = [NSPropertyListSerialization propertyListFromData:self.receivedData
                                                                   mutabilityOption:NSPropertyListImmutable
                                                                             format:&format
                                                                   errorDescription:&errorStr];
@@ -165,7 +165,7 @@
 
 - (NSString *)responseAsText
 {
-    return [[[NSString alloc] initWithData:receivedData 
+    return [[[NSString alloc] initWithData:self.receivedData 
                                  encoding:NSUTF8StringEncoding] autorelease];
 }
 
@@ -174,34 +174,32 @@
 
 - (void)startConnection:(NSURLRequest *)request
 {
-    if (asynchronous)
+    if (self.asynchronous)
     {
         [self cancelConnection];
-        conn = [[NSURLConnection alloc] initWithRequest:request
-                                               delegate:self
-                                       startImmediately:YES];
+        self.conn = [[[NSURLConnection alloc] initWithRequest:request
+                                                     delegate:self
+                                             startImmediately:YES] autorelease];
         
-        if (!conn)
+        if (!self.conn)
         {
-            if ([delegate respondsToSelector:@selector(wrapper:didFailWithError:)])
+            if ([self.delegate respondsToSelector:@selector(wrapper:didFailWithError:)])
             {
-                NSMutableDictionary* info = [NSMutableDictionary dictionaryWithObject:[request URL] forKey:NSErrorFailingURLStringKey];
+                NSMutableDictionary* info = [NSMutableDictionary dictionaryWithObject:[request URL] forKey:NSURLErrorFailingURLStringErrorKey];
                 [info setObject:@"Could not open connection" forKey:NSLocalizedDescriptionKey];
                 NSError* error = [NSError errorWithDomain:@"Wrapper" code:1 userInfo:info];
-                [delegate wrapper:self didFailWithError:error];
+                [self.delegate wrapper:self didFailWithError:error];
             }
         }
     }
     else
     {
-        NSURLResponse* response = [[NSURLResponse alloc] init];
-        NSError* error = [[NSError alloc] init];
-        NSData* data = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&error];
-        [receivedData setData:data];
-        [response release];
-        response = nil;
-        [error release];
-        error = nil;
+        NSURLResponse* response = [[[NSURLResponse alloc] init] autorelease];
+        NSError* error = nil;
+        NSData *data = [NSURLConnection sendSynchronousRequest:request 
+                                             returningResponse:&response
+                                                         error:&error];
+        [self.receivedData appendData:data];
     }
 }
 
@@ -213,8 +211,8 @@
     NSInteger count = [challenge previousFailureCount];
     if (count == 0)
     {
-        NSURLCredential* credential = [[NSURLCredential credentialWithUser:username
-                                                                  password:password
+        NSURLCredential* credential = [[NSURLCredential credentialWithUser:self.username
+                                                                  password:self.password
                                                                persistence:NSURLCredentialPersistenceNone] autorelease];
         [[challenge sender] useCredential:credential 
                forAuthenticationChallenge:challenge];
@@ -222,9 +220,9 @@
     else
     {
         [[challenge sender] cancelAuthenticationChallenge:challenge];
-        if ([delegate respondsToSelector:@selector(wrapperHasBadCredentials:)])
+        if ([self.delegate respondsToSelector:@selector(wrapperHasBadCredentials:)])
         {
-            [delegate wrapperHasBadCredentials:self];
+            [self.delegate wrapperHasBadCredentials:self];
         }
     }
 }
@@ -241,9 +239,9 @@
         case 201:
         {
             NSString* url = [[httpResponse allHeaderFields] objectForKey:@"Location"];
-            if ([delegate respondsToSelector:@selector(wrapper:didCreateResourceAtURL:)])
+            if ([self.delegate respondsToSelector:@selector(wrapper:didCreateResourceAtURL:)])
             {
-                [delegate wrapper:self didCreateResourceAtURL:url];
+                [self.delegate wrapper:self didCreateResourceAtURL:url];
             }
             break;
         }
@@ -254,36 +252,36 @@
         
         default:
         {
-            if ([delegate respondsToSelector:@selector(wrapper:didReceiveStatusCode:)])
+            if ([self.delegate respondsToSelector:@selector(wrapper:didReceiveStatusCode:)])
             {
-                [delegate wrapper:self didReceiveStatusCode:statusCode];
+                [self.delegate wrapper:self didReceiveStatusCode:statusCode];
             }
             break;
         }
     }
-    [receivedData setLength:0];
+    [self.receivedData setLength:0];
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
 {
-    [receivedData appendData:data];
+    [self.receivedData appendData:data];
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
     [self cancelConnection];
-    if ([delegate respondsToSelector:@selector(wrapper:didFailWithError:)])
+    if ([self.delegate respondsToSelector:@selector(wrapper:didFailWithError:)])
     {
-        [delegate wrapper:self didFailWithError:error];
+        [self.delegate wrapper:self didFailWithError:error];
     }
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
     [self cancelConnection];
-    if ([delegate respondsToSelector:@selector(wrapper:didRetrieveData:)])
+    if ([self.delegate respondsToSelector:@selector(wrapper:didRetrieveData:)])
     {
-        [delegate wrapper:self didRetrieveData:receivedData];
+        [self.delegate wrapper:self didRetrieveData:self.receivedData];
     }
 }
 
